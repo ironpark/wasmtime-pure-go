@@ -77,6 +77,13 @@ type (
 	wasmtime_component_extern_t       struct{ _ [0]byte }
 	wasmtime_component_linker_t       struct{ _ [0]byte }
 	wasmtime_component_type_t         struct{ _ [0]byte }
+
+	wasmtime_component_func_type_t       struct{ _ [0]byte }
+	wasmtime_component_instance_type_t   struct{ _ [0]byte }
+	wasmtime_component_linker_instance_t struct{ _ [0]byte }
+	wasmtime_component_resource_any_t    struct{ _ [0]byte }
+	wasmtime_component_resource_host_t   struct{ _ [0]byte }
+	wasmtime_component_resource_type_t   struct{ _ [0]byte }
 )
 
 // C enums, all `uint8_t` in the Wasmtime C API.
@@ -135,6 +142,29 @@ const (
 	WASMTIME_COMPONENT_ITEM_RESOURCE           = 4
 	WASMTIME_COMPONENT_ITEM_CORE_FUNC          = 5
 	WASMTIME_COMPONENT_ITEM_TYPE               = 6
+
+	WASMTIME_COMPONENT_BOOL     = 0
+	WASMTIME_COMPONENT_S8       = 1
+	WASMTIME_COMPONENT_U8       = 2
+	WASMTIME_COMPONENT_S16      = 3
+	WASMTIME_COMPONENT_U16      = 4
+	WASMTIME_COMPONENT_S32      = 5
+	WASMTIME_COMPONENT_U32      = 6
+	WASMTIME_COMPONENT_S64      = 7
+	WASMTIME_COMPONENT_U64      = 8
+	WASMTIME_COMPONENT_F32      = 9
+	WASMTIME_COMPONENT_F64      = 10
+	WASMTIME_COMPONENT_CHAR     = 11
+	WASMTIME_COMPONENT_STRING   = 12
+	WASMTIME_COMPONENT_LIST     = 13
+	WASMTIME_COMPONENT_RECORD   = 14
+	WASMTIME_COMPONENT_TUPLE    = 15
+	WASMTIME_COMPONENT_VARIANT  = 16
+	WASMTIME_COMPONENT_ENUM     = 17
+	WASMTIME_COMPONENT_OPTION   = 18
+	WASMTIME_COMPONENT_RESULT   = 19
+	WASMTIME_COMPONENT_FLAGS    = 20
+	WASMTIME_COMPONENT_RESOURCE = 21
 
 	WASMTIME_COMPONENT_VALTYPE_BOOL          = 0
 	WASMTIME_COMPONENT_VALTYPE_S8            = 1
@@ -241,6 +271,53 @@ type wasmtime_component_instance_t struct {
 	__private uint32
 	_         uint32
 }
+
+// wasmtime_component_func_t is `{ uint64_t store_id; uint32_t; uint32_t;
+// void *; }`.
+type wasmtime_component_func_t struct {
+	store_id   uint64
+	__private1 uint32
+	__private2 uint32
+	__private3 uintptr
+}
+
+// wasmtime_component_val_t is `{ uint8_t kind; wasmtime_component_valunion_t
+// of; }` where the union is 24 bytes, 8-byte aligned: its largest member is
+// a variant, a name and a pointer.
+type wasmtime_component_val_t struct {
+	kind uint8
+	_    [7]byte
+	of   [3]uint64
+}
+
+// The vectors and structs a component value's union holds.
+type (
+	wasmtime_component_vallist_t struct {
+		size uintptr
+		data *wasmtime_component_val_t
+	}
+	wasmtime_component_valrecord_t struct {
+		size uintptr
+		data *wasmtime_component_valrecord_entry_t
+	}
+	wasmtime_component_valflags_t struct {
+		size uintptr
+		data *wasm_byte_vec_t
+	}
+	wasmtime_component_valrecord_entry_t struct {
+		name wasm_byte_vec_t
+		val  wasmtime_component_val_t
+	}
+	wasmtime_component_valvariant_t struct {
+		discriminant wasm_byte_vec_t
+		val          *wasmtime_component_val_t
+	}
+	wasmtime_component_valresult_t struct {
+		is_ok bool
+		_     [7]byte
+		val   *wasmtime_component_val_t
+	}
+)
 
 // wasmtime_val_t is `{ uint8_t kind; wasmtime_valunion_t of; }` where the
 // union is 24 bytes, 8-byte aligned.

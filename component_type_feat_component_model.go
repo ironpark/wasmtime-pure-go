@@ -1,6 +1,9 @@
 package wasmtime
 
-import "runtime"
+import (
+	"runtime"
+	"unsafe"
+)
 
 // ComponentType describes the type of a [Component] — its lists of imports
 // and exports. Walk the lists with [ComponentType.ImportNth] and
@@ -89,7 +92,7 @@ func (ct *ComponentType) itemNth(i int, isImport bool) (string, *ComponentItem) 
 	name := goStringN(nameP, int(nameLen))
 	wasmtime_component_extern_type(extern, &item)
 	wasmtime_component_extern_delete(extern)
-	return name, mkComponentItem(item)
+	return name, mkComponentItem(item, ct.engine)
 }
 
 // Close deallocates this component type explicitly.
@@ -124,11 +127,12 @@ const (
 // core-func) will be wired up in follow-up work.
 type ComponentItem struct {
 	val    wasmtime_component_item_t
+	engine *Engine
 	closed bool
 }
 
-func mkComponentItem(val wasmtime_component_item_t) *ComponentItem {
-	it := &ComponentItem{val: val}
+func mkComponentItem(val wasmtime_component_item_t, engine *Engine) *ComponentItem {
+	it := &ComponentItem{val: val, engine: engine}
 	runtime.SetFinalizer(it, func(it *ComponentItem) {
 		it.Close()
 	})
@@ -158,6 +162,72 @@ func (it *ComponentItem) TypeAlias() *ComponentValType {
 	go_component_item_get_type(&it.val, &cloned)
 	runtime.KeepAlive(it)
 	return mkComponentValType(cloned)
+}
+
+// InstanceType returns the type of the instance this item is when its kind
+// is [ComponentItemKindComponentInstance], such as an interface a component
+// imports; nil for any other kind.
+func (it *ComponentItem) InstanceType() *ComponentInstanceType {
+	if it.Kind() != ComponentItemKindComponentInstance {
+		return nil
+	}
+	ptr := wasmtime_component_instance_type_clone(*(**wasmtime_component_instance_type_t)(unsafe.Pointer(&it.val.of)))
+	runtime.KeepAlive(it)
+	ty := &ComponentInstanceType{_ptr: ptr, engine: it.engine}
+	runtime.SetFinalizer(ty, func(ty *ComponentInstanceType) { ty.Close() })
+	return ty
+}
+
+// ComponentInstanceType is the type of a component instance: its exports.
+type ComponentInstanceType struct {
+	_ptr   *wasmtime_component_instance_type_t
+	engine *Engine
+}
+
+func (ty *ComponentInstanceType) ptr() *wasmtime_component_instance_type_t {
+	ret := ty._ptr
+	if ret == nil {
+		panic("object has been closed already")
+	}
+	maybeGC()
+	return ret
+}
+
+// ExportCount returns the number of the instance's exports.
+func (ty *ComponentInstanceType) ExportCount() int {
+	n := wasmtime_component_instance_type_export_count(ty.ptr(), ty.engine.ptr())
+	runtime.KeepAlive(ty)
+	runtime.KeepAlive(ty.engine)
+	return int(n)
+}
+
+// ExportNth returns the name and the [ComponentItem] of the `i`-th export.
+// Returns `("", nil)` if `i` is out of range.
+func (ty *ComponentInstanceType) ExportNth(i int) (string, *ComponentItem) {
+	var nameP *byte
+	var nameLen uintptr
+	var extern *wasmtime_component_extern_t
+	found := wasmtime_component_instance_type_export_nth(ty.ptr(), ty.engine.ptr(), uintptr(i), &nameP, &nameLen, &extern)
+	runtime.KeepAlive(ty)
+	runtime.KeepAlive(ty.engine)
+	if !found {
+		return "", nil
+	}
+	name := goStringN(nameP, int(nameLen))
+	var item wasmtime_component_item_t
+	wasmtime_component_extern_type(extern, &item)
+	wasmtime_component_extern_delete(extern)
+	return name, mkComponentItem(item, ty.engine)
+}
+
+// Close deallocates this type explicitly.
+func (ty *ComponentInstanceType) Close() {
+	if ty._ptr == nil {
+		return
+	}
+	runtime.SetFinalizer(ty, nil)
+	wasmtime_component_instance_type_delete(ty._ptr)
+	ty._ptr = nil
 }
 
 // Close deallocates this item explicitly.

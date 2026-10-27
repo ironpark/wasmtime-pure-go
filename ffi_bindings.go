@@ -20,6 +20,7 @@ var (
 	wasi_config_set_stdout_file                               func(a0 *wasi_config_t, a1 string) bool
 	wasm_byte_vec_delete                                      func(a0 *wasm_byte_vec_t)
 	wasm_byte_vec_new                                         func(a0 *wasm_byte_vec_t, a1 uintptr, a2 *byte)
+	wasm_byte_vec_new_empty                                   func(a0 *wasm_byte_vec_t)
 	wasm_config_delete                                        func(a0 *wasm_config_t)
 	wasm_config_new                                           func() *wasm_config_t
 	wasm_engine_delete                                        func(a0 *wasm_engine_t)
@@ -78,14 +79,37 @@ var (
 	wasmtime_component_export_index_delete                    func(a0 *wasmtime_component_export_index_t)
 	wasmtime_component_extern_delete                          func(a0 *wasmtime_component_extern_t)
 	wasmtime_component_extern_type                            func(a0 *wasmtime_component_extern_t, a1 *wasmtime_component_item_t)
+	wasmtime_component_func_call                              func(a0 *wasmtime_component_func_t, a1 *wasmtime_context_t, a2 *wasmtime_component_val_t, a3 uintptr, a4 *wasmtime_component_val_t, a5 uintptr) *wasmtime_error_t
 	wasmtime_component_get_export_index                       func(a0 *wasmtime_component_t, a1 *wasmtime_component_export_index_t, a2 *byte, a3 uintptr) *wasmtime_component_export_index_t
 	wasmtime_component_instance_get_export_index              func(a0 *wasmtime_component_instance_t, a1 *wasmtime_context_t, a2 *wasmtime_component_export_index_t, a3 *byte, a4 uintptr) *wasmtime_component_export_index_t
+	wasmtime_component_instance_get_func                      func(a0 *wasmtime_component_instance_t, a1 *wasmtime_context_t, a2 *wasmtime_component_export_index_t, a3 *wasmtime_component_func_t) bool
+	wasmtime_component_instance_type_clone                    func(a0 *wasmtime_component_instance_type_t) *wasmtime_component_instance_type_t
+	wasmtime_component_instance_type_delete                   func(a0 *wasmtime_component_instance_type_t)
+	wasmtime_component_instance_type_export_count             func(a0 *wasmtime_component_instance_type_t, a1 *wasm_engine_t) uintptr
+	wasmtime_component_instance_type_export_nth               func(a0 *wasmtime_component_instance_type_t, a1 *wasm_engine_t, a2 uintptr, a3 **byte, a4 *uintptr, a5 **wasmtime_component_extern_t) bool
 	wasmtime_component_item_delete                            func(a0 *wasmtime_component_item_t)
+	wasmtime_component_linker_add_wasip2                      func(a0 *wasmtime_component_linker_t) *wasmtime_error_t
 	wasmtime_component_linker_define_unknown_imports_as_traps func(a0 *wasmtime_component_linker_t, a1 *wasmtime_component_t) *wasmtime_error_t
 	wasmtime_component_linker_delete                          func(a0 *wasmtime_component_linker_t)
+	wasmtime_component_linker_instance_add_func               func(a0 *wasmtime_component_linker_instance_t, a1 *byte, a2 uintptr, a3 uintptr, a4 uintptr, a5 uintptr) *wasmtime_error_t
+	wasmtime_component_linker_instance_add_instance           func(a0 *wasmtime_component_linker_instance_t, a1 *byte, a2 uintptr, a3 **wasmtime_component_linker_instance_t) *wasmtime_error_t
+	wasmtime_component_linker_instance_add_resource           func(a0 *wasmtime_component_linker_instance_t, a1 *byte, a2 uintptr, a3 *wasmtime_component_resource_type_t, a4 uintptr, a5 uintptr, a6 uintptr) *wasmtime_error_t
+	wasmtime_component_linker_instance_delete                 func(a0 *wasmtime_component_linker_instance_t)
 	wasmtime_component_linker_instantiate                     func(a0 *wasmtime_component_linker_t, a1 *wasmtime_context_t, a2 *wasmtime_component_t, a3 *wasmtime_component_instance_t) *wasmtime_error_t
 	wasmtime_component_linker_new                             func(a0 *wasm_engine_t) *wasmtime_component_linker_t
+	wasmtime_component_linker_root                            func(a0 *wasmtime_component_linker_t) *wasmtime_component_linker_instance_t
 	wasmtime_component_new                                    func(a0 *wasm_engine_t, a1 *byte, a2 uintptr, a3 **wasmtime_component_t) *wasmtime_error_t
+	wasmtime_component_resource_any_clone                     func(a0 *wasmtime_component_resource_any_t) *wasmtime_component_resource_any_t
+	wasmtime_component_resource_any_drop                      func(a0 *wasmtime_context_t, a1 *wasmtime_component_resource_any_t) *wasmtime_error_t
+	wasmtime_component_resource_any_owned                     func(a0 *wasmtime_component_resource_any_t) bool
+	wasmtime_component_resource_any_to_host                   func(a0 *wasmtime_context_t, a1 *wasmtime_component_resource_any_t, a2 **wasmtime_component_resource_host_t) *wasmtime_error_t
+	wasmtime_component_resource_host_delete                   func(a0 *wasmtime_component_resource_host_t)
+	wasmtime_component_resource_host_new                      func(a0 bool, a1 uint32, a2 uint32) *wasmtime_component_resource_host_t
+	wasmtime_component_resource_host_rep                      func(a0 *wasmtime_component_resource_host_t) uint32
+	wasmtime_component_resource_host_to_any                   func(a0 *wasmtime_context_t, a1 *wasmtime_component_resource_host_t, a2 **wasmtime_component_resource_any_t) *wasmtime_error_t
+	wasmtime_component_resource_host_type                     func(a0 *wasmtime_component_resource_host_t) uint32
+	wasmtime_component_resource_type_delete                   func(a0 *wasmtime_component_resource_type_t)
+	wasmtime_component_resource_type_new_host                 func(a0 uint32) *wasmtime_component_resource_type_t
 	wasmtime_component_serialize                              func(a0 *wasmtime_component_t, a1 *wasm_byte_vec_t) *wasmtime_error_t
 	wasmtime_component_type                                   func(a0 *wasmtime_component_t) *wasmtime_component_type_t
 	wasmtime_component_type_delete                            func(a0 *wasmtime_component_type_t)
@@ -93,6 +117,11 @@ var (
 	wasmtime_component_type_export_nth                        func(a0 *wasmtime_component_type_t, a1 *wasm_engine_t, a2 uintptr, a3 **byte, a4 *uintptr, a5 **wasmtime_component_extern_t) bool
 	wasmtime_component_type_import_count                      func(a0 *wasmtime_component_type_t, a1 *wasm_engine_t) uintptr
 	wasmtime_component_type_import_nth                        func(a0 *wasmtime_component_type_t, a1 *wasm_engine_t, a2 uintptr, a3 **byte, a4 *uintptr, a5 **wasmtime_component_extern_t) bool
+	wasmtime_component_val_delete                             func(a0 *wasmtime_component_val_t)
+	wasmtime_component_val_new                                func(a0 *wasmtime_component_val_t) *wasmtime_component_val_t
+	wasmtime_component_valflags_new_uninit                    func(a0 *wasmtime_component_valflags_t, a1 uintptr)
+	wasmtime_component_vallist_new_uninit                     func(a0 *wasmtime_component_vallist_t, a1 uintptr)
+	wasmtime_component_valrecord_new_uninit                   func(a0 *wasmtime_component_valrecord_t, a1 uintptr)
 	wasmtime_component_valtype_clone                          func(a0 *wasmtime_component_valtype_t, a1 *wasmtime_component_valtype_t)
 	wasmtime_component_valtype_delete                         func(a0 *wasmtime_component_valtype_t)
 	wasmtime_config_cache_config_load                         func(a0 *wasm_config_t, a1 *byte) *wasmtime_error_t
@@ -226,6 +255,7 @@ var (
 	_ = bind(&wasi_config_set_stdout_file, "wasi_config_set_stdout_file")
 	_ = bind(&wasm_byte_vec_delete, "wasm_byte_vec_delete")
 	_ = bind(&wasm_byte_vec_new, "wasm_byte_vec_new")
+	_ = bind(&wasm_byte_vec_new_empty, "wasm_byte_vec_new_empty")
 	_ = bind(&wasm_config_delete, "wasm_config_delete")
 	_ = bind(&wasm_config_new, "wasm_config_new")
 	_ = bind(&wasm_engine_delete, "wasm_engine_delete")
@@ -284,14 +314,37 @@ var (
 	_ = bind(&wasmtime_component_export_index_delete, "wasmtime_component_export_index_delete")
 	_ = bind(&wasmtime_component_extern_delete, "wasmtime_component_extern_delete")
 	_ = bind(&wasmtime_component_extern_type, "wasmtime_component_extern_type")
+	_ = bind(&wasmtime_component_func_call, "wasmtime_component_func_call")
 	_ = bind(&wasmtime_component_get_export_index, "wasmtime_component_get_export_index")
 	_ = bind(&wasmtime_component_instance_get_export_index, "wasmtime_component_instance_get_export_index")
+	_ = bind(&wasmtime_component_instance_get_func, "wasmtime_component_instance_get_func")
+	_ = bind(&wasmtime_component_instance_type_clone, "wasmtime_component_instance_type_clone")
+	_ = bind(&wasmtime_component_instance_type_delete, "wasmtime_component_instance_type_delete")
+	_ = bind(&wasmtime_component_instance_type_export_count, "wasmtime_component_instance_type_export_count")
+	_ = bind(&wasmtime_component_instance_type_export_nth, "wasmtime_component_instance_type_export_nth")
 	_ = bind(&wasmtime_component_item_delete, "wasmtime_component_item_delete")
+	_ = bind(&wasmtime_component_linker_add_wasip2, "wasmtime_component_linker_add_wasip2")
 	_ = bind(&wasmtime_component_linker_define_unknown_imports_as_traps, "wasmtime_component_linker_define_unknown_imports_as_traps")
 	_ = bind(&wasmtime_component_linker_delete, "wasmtime_component_linker_delete")
+	_ = bind(&wasmtime_component_linker_instance_add_func, "wasmtime_component_linker_instance_add_func")
+	_ = bind(&wasmtime_component_linker_instance_add_instance, "wasmtime_component_linker_instance_add_instance")
+	_ = bind(&wasmtime_component_linker_instance_add_resource, "wasmtime_component_linker_instance_add_resource")
+	_ = bind(&wasmtime_component_linker_instance_delete, "wasmtime_component_linker_instance_delete")
 	_ = bind(&wasmtime_component_linker_instantiate, "wasmtime_component_linker_instantiate")
 	_ = bind(&wasmtime_component_linker_new, "wasmtime_component_linker_new")
+	_ = bind(&wasmtime_component_linker_root, "wasmtime_component_linker_root")
 	_ = bind(&wasmtime_component_new, "wasmtime_component_new")
+	_ = bind(&wasmtime_component_resource_any_clone, "wasmtime_component_resource_any_clone")
+	_ = bind(&wasmtime_component_resource_any_drop, "wasmtime_component_resource_any_drop")
+	_ = bind(&wasmtime_component_resource_any_owned, "wasmtime_component_resource_any_owned")
+	_ = bind(&wasmtime_component_resource_any_to_host, "wasmtime_component_resource_any_to_host")
+	_ = bind(&wasmtime_component_resource_host_delete, "wasmtime_component_resource_host_delete")
+	_ = bind(&wasmtime_component_resource_host_new, "wasmtime_component_resource_host_new")
+	_ = bind(&wasmtime_component_resource_host_rep, "wasmtime_component_resource_host_rep")
+	_ = bind(&wasmtime_component_resource_host_to_any, "wasmtime_component_resource_host_to_any")
+	_ = bind(&wasmtime_component_resource_host_type, "wasmtime_component_resource_host_type")
+	_ = bind(&wasmtime_component_resource_type_delete, "wasmtime_component_resource_type_delete")
+	_ = bind(&wasmtime_component_resource_type_new_host, "wasmtime_component_resource_type_new_host")
 	_ = bind(&wasmtime_component_serialize, "wasmtime_component_serialize")
 	_ = bind(&wasmtime_component_type, "wasmtime_component_type")
 	_ = bind(&wasmtime_component_type_delete, "wasmtime_component_type_delete")
@@ -299,6 +352,11 @@ var (
 	_ = bind(&wasmtime_component_type_export_nth, "wasmtime_component_type_export_nth")
 	_ = bind(&wasmtime_component_type_import_count, "wasmtime_component_type_import_count")
 	_ = bind(&wasmtime_component_type_import_nth, "wasmtime_component_type_import_nth")
+	_ = bind(&wasmtime_component_val_delete, "wasmtime_component_val_delete")
+	_ = bind(&wasmtime_component_val_new, "wasmtime_component_val_new")
+	_ = bind(&wasmtime_component_valflags_new_uninit, "wasmtime_component_valflags_new_uninit")
+	_ = bind(&wasmtime_component_vallist_new_uninit, "wasmtime_component_vallist_new_uninit")
+	_ = bind(&wasmtime_component_valrecord_new_uninit, "wasmtime_component_valrecord_new_uninit")
 	_ = bind(&wasmtime_component_valtype_clone, "wasmtime_component_valtype_clone")
 	_ = bind(&wasmtime_component_valtype_delete, "wasmtime_component_valtype_delete")
 	_ = bind(&wasmtime_config_cache_config_load, "wasmtime_config_cache_config_load")
